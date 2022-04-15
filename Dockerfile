@@ -32,8 +32,9 @@ RUN mkdir build \
     && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DMLIR_DIR=`pwd`/../mlir-build/lib/cmake/mlir -DClang_DIR=`pwd`/../mlir-build/lib/cmake/clang \
     && ninja
 
+
 WORKDIR /root
-RUN git clone https://github.com/ivanradanov/rodinia && cd rodinia && git checkout a0b4308
+RUN git clone https://github.com/ivanradanov/rodinia && cd rodinia && git checkout 551ebe6
 
 WORKDIR rodinia
 RUN ./scripts/enable-config.sh common/host.make.config common/docker.polygeist.host.make.config
@@ -48,3 +49,18 @@ RUN ln -s /root/rodinia_3.1/data /root/rodinia/data
 
 WORKDIR rodinia
 RUN sed -i 's/memkf02/docker/g' scripts/run_all_benches.sh
+COPY ./command2.txt /root/rodinia/data/b+tree/
+
+WORKDIR /root
+RUN cd Polygeist/mlir-build && ninja install
+RUN git clone https://github.com/ivanradanov/cpucuda_runtime && cd cpucuda_runtime && git checkout 265fe493e8c3cdc8dc52606100609302e0c6438f
+WORKDIR cpucuda_runtime
+RUN sed -i 's/cpucuda_libdevice.c//g' src/CMakeLists.txt
+RUN mkdir build \
+    && cd build \
+    && cmake .. -DCUDA_PATH=/usr/local/cuda -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang \
+    && make
+RUN cp build/src/libcpucudart.a /root/rodinia/mcuda-test/mcuda/libcpucuda.a
+COPY ./cuda-samples /root/cuda-samples
+
+
