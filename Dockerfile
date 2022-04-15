@@ -18,13 +18,13 @@ RUN apt-get -y install tzdata --assume-yes
 
 
 
-RUN apt-get install git cmake gcc g++ ninja-build -y
+RUN apt-get install git cmake gcc g++ ninja-build python -y
 
 RUN git clone https://github.com/wsmoses/Polygeist && cd Polygeist && git checkout 72029b6 && git submodule update --init --recursive
 RUN cd Polygeist \
     && mkdir mlir-build \
     && cd mlir-build \
-    && cmake ./llvm-project/llvm -GNinja -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="mlir;clang;openmp" -DLLVM_TARGETS_TO_BUILD="host" && ninja
+    && cmake ../llvm-project/llvm -GNinja -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="mlir;clang;openmp" -DLLVM_TARGETS_TO_BUILD="host" && ninja
 
 RUN cd Polygeist \
     && mkdir build \
