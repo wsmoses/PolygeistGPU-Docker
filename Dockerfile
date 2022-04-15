@@ -18,7 +18,7 @@ RUN apt-get -y install tzdata --assume-yes
 
 
 
-RUN apt-get install git cmake gcc g++ ninja-build python -y
+RUN apt-get install git cmake gcc g++ ninja-build python3 -y
 
 RUN git clone https://github.com/wsmoses/Polygeist && cd Polygeist && git checkout 72029b6 && git submodule update --init --recursive
 RUN cd Polygeist \
