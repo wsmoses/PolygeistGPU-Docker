@@ -21,7 +21,7 @@ RUN apt-get -y install tzdata --assume-yes
 RUN apt-get install git cmake gcc g++ ninja-build python3 -y
 
 WORKDIR /root
-RUN git clone https://github.com/wsmoses/Polygeist && cd Polygeist && git checkout 72029b6 && git submodule update --init --recursive
+RUN git clone https://github.com/wsmoses/Polygeist && cd Polygeist && git checkout 3976ff996f5d748dc857e44bc1197d442f1626e8 && git submodule update --init --recursive
 WORKDIR Polygeist
 RUN mkdir mlir-build \
     && cd mlir-build \
@@ -34,7 +34,7 @@ RUN mkdir build \
 
 
 WORKDIR /root
-RUN git clone https://github.com/ivanradanov/rodinia && cd rodinia && git checkout 551ebe6
+RUN git clone https://github.com/ivanradanov/rodinia && cd rodinia && git checkout 025fa7dc6929d44f02bcbc9d9418c0472c6a124e
 
 WORKDIR rodinia
 RUN ./scripts/enable-config.sh common/host.make.config common/docker.polygeist.host.make.config
