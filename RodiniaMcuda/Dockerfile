@@ -13,7 +13,7 @@ RUN echo "User ID: $UID"
 
 # Essential packages
 RUN apt-get update
-RUN apt-get install apt-utils
+RUN apt-get install apt-utils -y
 RUN apt-get -y install tzdata --assume-yes
 
 
