@@ -109,7 +109,7 @@ RUN apt-get install gfortran -y
 RUN apt-get install libiberty-dev -y
 RUN apt-get install libkqueue-dev -y
 COPY ./Makefile.docker ./
-RUN git checkout HEAD -- scripts/06_polygeist.sh && git fetch && git checkout 91155a465e3eaa78905289912539db55ac701fe5
+RUN git checkout HEAD -- scripts/06_polygeist.sh && git fetch && git checkout 5b392e3745122afb2ec420340d3fec82d2ba103d
 #RUN sed -i '/demangle.h/d' src/utils/utils.c
 #RUN sed -i '/demangle.h/d' wrapper/wrapper.c
 RUN sed -i 's/demangle.h/libiberty\/demangle.h/' src/utils/utils.c

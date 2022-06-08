@@ -11,7 +11,7 @@ CXX ?= g++
 FC ?= gfortran
 
 # define any compile-time flags
-OPTI ?= -O3 -ffast-math
+export OPTI ?= -O3 -ffast-math
 DEBUG ?= #-DDEBUG -O0 -g
 RedirectCUDA ?= -DUSE_MocCUDA=1 #=0
 RedirectCUDA += #-DUSE_MocREGISTERFNs
@@ -78,8 +78,9 @@ OBJS += $(CXXSRCS:.cpp=.o)
 OBJS += $(FSRCS:.f90=.o)
 
 OBJS += src/torch/kernels/TorchKernels.o
-CFLAGS += -DUSE_POLTERGEIST=1
-CXXFLAGS += -DUSE_POLTERGEIST=1
+export TORCH_KERNEL_FLAGS = -DUSE_POLTERGEIST=1 -DPOLTER_USE_MOCCUDA_ADD_KERNEL=1
+CFLAGS += $(TORCH_KERNEL_FLAGS)
+CXXFLAGS += $(TORCH_KERNEL_FLAGS)
 
 # define the executable file
 MAIN = lib/libMocCUDA.so
