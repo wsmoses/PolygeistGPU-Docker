@@ -63,4 +63,5 @@ RUN mkdir build \
 RUN cp build/src/libcpucudart.a /root/rodinia/mcuda-test/mcuda/libcpucuda.a
 COPY ./cuda-samples /root/cuda-samples
 
-
+WORKDIR /root/rodinia
+RUN sed -i 's/echo -n nn/#/g' scripts/cuda_apps.sh
