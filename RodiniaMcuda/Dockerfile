@@ -21,7 +21,7 @@ RUN apt-get -y install tzdata --assume-yes
 RUN apt-get install git cmake gcc g++ ninja-build python3 -y
 
 WORKDIR /root
-RUN git clone https://github.com/wsmoses/Polygeist && cd Polygeist && git checkout 3976ff996f5d748dc857e44bc1197d442f1626e8 && git submodule update --init --recursive
+RUN git clone https://github.com/wsmoses/Polygeist && cd Polygeist && git checkout 4a232df859a79c7ac0442a0a312ca0251c6f9b38 && git submodule update --init --recursive
 WORKDIR Polygeist
 RUN mkdir mlir-build \
     && cd mlir-build \
