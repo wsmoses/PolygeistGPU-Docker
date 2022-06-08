@@ -1,0 +1,146 @@
+#
+# 'make depend' uses makedepend to automatically generate dependencies
+#               (dependencies are added to end of Makefile)
+# 'make'        build executable file 'mycc'
+# 'make clean'  removes all .o and executable files
+#
+
+# define the C compiler to use
+CC ?= gcc
+CXX ?= g++
+FC ?= gfortran
+
+# define any compile-time flags
+OPTI ?= -O3 -ffast-math
+DEBUG ?= #-DDEBUG -O0 -g
+RedirectCUDA ?= -DUSE_MocCUDA=1 #=0
+RedirectCUDA += #-DUSE_MocREGISTERFNs
+RedirCUDAPaths ?= -DPATHTOMocDeviceProp='"$(shell pwd)"'
+RedirCUDAPaths += -DPATHTOCUDA_ROOT='"$(CUDA_TOOLKIT_ROOT_DIR)"' -DPATHTOCUDNN_ROOT='"$(CUDNN_ROOT)"'
+GrandCentralDispatch ?= -DUSE_GCD=1 #=0
+CFLAGS ?= $(OPTI) $(DEBUG) $(RedirectCUDA) $(RedirCUDAPaths) $(GrandCentralDispatch) \
+	  -Wall -Wno-unused-label -fPIC -fopenmp
+CXXFLAGS ?= $(CFLAGS) -Wno-deprecated-declarations -std=c++14
+
+# define any directories containing header files other than /usr/include
+#
+LOCALINCL = -I$(shell pwd)/src/cudart -I$(shell pwd)/src/cudnn -I$(shell pwd)/src/cublas \
+	    -I$(shell pwd)/src/utils -I$(shell pwd)/src/cudawrap
+CINCLUDES ?= $(LOCALINCL) \
+	     $(shell pkg-config --cflags openblas) \
+	     $(shell pkg-config --cflags libunwind) \
+	     $(shell pkg-config --cflags hwloc) \
+	     -I$(LIBDIS_ROOT)/include
+CXXINCLUDES ?= $(LOCALINCL) \
+	       -I$(TORCH_BUILD_ROOT)/aten/src \
+	       -I$(TORCH_BUILD_ROOT)/torch/include \
+	       -I$(CUDA_TOOLKIT_ROOT_DIR)/include
+FINCLUDES ?= $(LOCALINCL)
+
+# define library paths in addition to /usr/lib
+#   if I wanted to include libraries not in /usr/lib I'd specify
+#   their path using -Lpath, something like:
+LFLAGS ?= -L$(VENV_SITEPACKAGES)/torch/lib -Wl,-rpath=$(VENV_SITEPACKAGES)/torch/lib \
+	  $(shell pkg-config --libs-only-L openblas) \
+	  $(shell pkg-config --libs-only-L libunwind) \
+	  $(shell pkg-config --libs-only-L hwloc) \
+	  -L$(LIBDIS_ROOT)/lib -L$(LIBPWQ_ROOT)/lib -L$(LIBKQU_ROOT)/lib64
+
+# define any libraries to link into executable:
+#   if I want to link in libraries (libx.so or libx.a) I use the -llibname
+#   option, something like (this will link in libmylib.so and libm.so:
+LIBS ?= $(shell pkg-config --libs-only-l openblas) \
+	$(shell pkg-config --libs-only-l libunwind) \
+	$(shell pkg-config --libs-only-l hwloc) \
+	-liberty -lstdc++ -lc10 \
+	-l:libdispatch.a -l:libpthread_workqueue.a -lkqueue -lpthread -lunwind
+
+# define the C source files
+CSRCS ?= src/cudawrap/passthrough.c \
+	 src/cudart/hijack_cuda_runtime_api.c \
+	 src/cudnn/hijack_cudnn.c \
+	 src/cublas/hijack_cublas.c \
+	 src/utils/utils.c src/utils/addTensor.c src/utils/async.c
+CXXSRCS ?= src/torch/hijack_torch_cuda.cpp
+FSRCS ?= src/utils/frt_utils.f90
+
+# define the C object files
+#
+# This uses Suffix Replacement within a macro:
+#   $(name:string1=string2)
+#         For each word in 'name' replace 'string1' with 'string2'
+# Below we are replacing the suffix .c of all words in the macro SRCS
+# with the .o suffix
+#
+.SUFFIXES: .c .cpp .f90
+OBJS = $(CSRCS:.c=.o)
+OBJS += $(CXXSRCS:.cpp=.o)
+OBJS += $(FSRCS:.f90=.o)
+
+OBJS += src/torch/kernels/TorchKernels.o
+CFLAGS += -DUSE_POLTERGEIST=1
+CXXFLAGS += -DUSE_POLTERGEIST=1
+
+# define the executable file
+MAIN = lib/libMocCUDA.so
+CUDNN_shared = lib/cudnn_dummy/lib64/libcudnn.so
+CUDNN_static = lib/cudnn_dummy/lib64/libcudnn_static.a
+
+#
+# The following part of the makefile is generic; it can be used to
+# build any executable just by changing the definitions above and by
+# deleting dependencies appended to the file from 'make depend'
+#
+
+.PHONY: depend clean
+
+all:    GENLIBDIR $(MAIN) $(CUDNN_shared) $(CUDNN_static)
+	@echo  "Our CUDA wrapper" $(MAIN) "has been compiled,"
+	@echo  "use LD_PRELOAD=$(shell pwd)/lib/libMocCUDA.so <binary> to apply it."
+
+cudnn:	GENLIBDIR $(CUDNN_shared) $(CUDNN_static)
+
+GENLIBDIR:
+	mkdir -p $(shell pwd)/lib/cudnn_dummy/lib64 $(shell pwd)/lib/cudnn_dummy/include
+
+$(MAIN): $(OBJS)
+	$(CC) $(CFLAGS) -shared -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+
+$(CUDNN_shared): ./src/cudnn/hijack_cudnn.o
+	$(CC) $(CFLAGS) $< -shared -o $@ $(LFLAGS) $(LIBS)
+
+$(CUDNN_static): ./src/cudnn/hijack_cudnn.o
+	ar rcs $@ $<
+
+# this is a suffix replacement rule for building .o's from .c's
+# it uses automatic variables $<: the name of the prerequisite of
+# the rule(a .c file) and $@: the name of the target of the rule (a .o file)
+# (see the gnu make manual section about automatic variables)
+.c.o:
+	$(CC) $(CFLAGS) $(CINCLUDES) -c $< -o $@
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) $(CXXINCLUDES) -c $< -o $@
+
+.f90.o:
+	$(FC) $(FFLAGS) $(FINCLUDES) -c $< -o $@
+
+src/torch/kernels/TorchKernels.o: force
+	$(MAKE) $(MFLAGS) -C src/torch/kernels
+force:
+	true
+
+#BinaryArithmeticKernel.o:
+#	$(POLTER_CLANG) $(POLTER_CCFLAGS) \
+#		-I$(TORCH_BUILD_ROOT)/torch/include -I$(TORCH_BUILD_ROOT)/aten/src $(CINCLUDES) \
+#		-DUSE_POLTERGEIST=1 -DUSE_MocCUDA=1 $(OPTI) $(DEBUG) -fPIC -fopenmp \
+#		-c ./BinaryArithmeticKernel.cu -o ./BinaryArithmeticKernel.o
+
+clean:
+	$(RM) *.o *~ lib/*.so lib/*.a
+	$(MAKE) $(MFLAGS) -C src/torch/kernels clean
+
+depend: $(SRCS)
+	makedepend $(CINCLUDES) $(CXXINCLUDES) $^
+
+# DO NOT DELETE THIS LINE -- make depend needs it
