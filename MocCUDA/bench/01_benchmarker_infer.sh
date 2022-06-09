@@ -29,7 +29,7 @@ FAC6_48="$(seq 6 6 48)"
 FAC12_288="6 $(seq 12 12 288)"
 
 TMPLOG="/dev/shm/`hostname -s`-${BASHPID}"
-RUNINFO="time:\|^mean\|^min"
+RUNINFO="Time:\|samples_per_second"
 LOGDIR="${SDIR}/../log" ; mkdir -p "${LOGDIR}"
 
 cd "${BENCHMARKER_ROOT}"/

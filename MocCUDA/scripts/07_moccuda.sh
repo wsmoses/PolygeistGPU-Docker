@@ -44,3 +44,4 @@ CXX="${MocCXX}"
 #mv lib/libMocCUDA.so lib/libMocCUDA_gemmfntiming.so
 
 make -j$(nproc) -f Makefile.${MocHOST} -B
+make -j$(nproc) -f Makefile.no-polygeist.${MocHOST} -B

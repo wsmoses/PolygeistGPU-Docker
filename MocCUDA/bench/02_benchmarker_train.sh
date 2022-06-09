@@ -8,6 +8,10 @@ if [[ "${BACKEND}" = *"moccuda"* ]]; then
 	PRELOADLIBS="/root/MocCUDA/lib/libMocCUDA.so:/usr/local/lib/libomp.so:/usr/lib/x86_64-linux-gnu/libopenblas.so"
 	PRELOG="${BACKEND}"
 	RUNVERS="--type gpu"
+elif [[ "${BACKEND}" = *"moccuda-no-polygeist"* ]]; then
+	PRELOADLIBS="/root/MocCUDA/lib/libMocCUDA-no-polygeist.so:/usr/local/lib/libomp.so:/usr/lib/x86_64-linux-gnu/libopenblas.so"
+	PRELOG="${BACKEND}"
+	RUNVERS="--type gpu"
 elif [[ "${BACKEND}" = *"dnnl"* ]]; then
 	PRELOG="${BACKEND}"
 	RUNVERS="--type cpu_mkl"
@@ -29,7 +33,7 @@ FAC6_48="$(seq 6 6 48)"
 FAC12_288="6 $(seq 12 12 288)"
 
 TMPLOG="/dev/shm/`hostname -s`-${BASHPID}"
-RUNINFO="time:\|^mean\|^min"
+RUNINFO="Time:\|samples_per_second"
 LOGDIR="${SDIR}/../log" ; mkdir -p "${LOGDIR}"
 
 cd "${BENCHMARKER_ROOT}"/
