@@ -67,6 +67,12 @@ WORKDIR /root/rodinia
 RUN sed -i 's/echo -n nn/#/g' scripts/cuda_apps.sh
 
 WORKDIR /root/rodinia/mcuda-test/
+COPY ./mcudaMatrixMul.cpp /root/rodinia/mcuda-test/mcuda/matrixMul.cpp
 RUN bash -c "CPUCUDA_BUILD_DIR=/root/cpucuda_runtime/build/ make"
 RUN sed -i 's/numactl -N 0 -m 0 //g' /root/rodinia/mcuda-test/run-scaling.sh
-RUN bash -c "./run-scaling.sh '128 256 512 1024 2048' '1 2 4 8 16 24' 10 > mm_results.py"
+RUN bash -c "./run-scaling.sh '128 256 512 1024 2048' '1 2 4 8 16 32' 10 > mm_results.py"
+WORKDIR /root/rodinia/
+COPY ./run_all_benches.sh ./scripts/run_all_benches.sh
+RUN ./scripts/run_all_benches.sh
+
+#RUN bash -c "./run-scaling.sh '128 256' '1 2 4 8 16 24' 10 > mm_results.py"
