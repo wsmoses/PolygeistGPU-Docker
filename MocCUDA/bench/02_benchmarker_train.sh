@@ -38,8 +38,10 @@ LOGDIR="${SDIR}/../log" ; mkdir -p "${LOGDIR}"
 
 cd "${BENCHMARKER_ROOT}"/
 N=0
-for OMP in `echo ${POW6} ${FAC6_48} | sed -e 's/ /\n/g' | sort -n`; do
-	for BS in `echo ${POW8} ${FAC12_288} | sed -e 's/ /\n/g' | sort -n`; do
+#for OMP in `echo ${POW6} ${FAC6_48} | sed -e 's/ /\n/g' | sort -n`; do
+for OMP in 1 2 4 8 16 32; do
+	#for BS in `echo ${POW8} ${FAC12_288} | sed -e 's/ /\n/g' | sort -n`; do
+	for BS in 1 2 4 6 8 12; do
 		LOG="${LOGDIR}/${BMSN}_${PRELOG}_cmg$((1+$N))_omp${OMP}.log"
 		export OMP_NUM_THREADS=${OMP}
 		echo "batch size: ${BS}  problem size: $((4*${BS}))  numa: 0  omp: ${OMP}  backend: ${BACKEND}" | tee -a ${LOG}

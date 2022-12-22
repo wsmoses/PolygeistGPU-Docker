@@ -132,4 +132,17 @@ COPY ./bench/* ./bench/
 
 WORKDIR /root/MocCUDA/dep/benchmarker
 
+WORKDIR /root/MocCUDA/
+RUN bash -c 'BACKEND=native ./bench/02_benchmarker_train.sh'
+RUN bash -c 'BACKEND=moccuda ./bench/02_benchmarker_train.sh'
+
+RUN bash -c 'apt-get update; true'
+RUN apt-get install python3-pandas -y
+
+RUN mkdir plots
+WORKDIR plots
+COPY ./conv2d_2.py ./
+
+RUN python3 conv2d_2.py
+
 #RUN cd /root/MocCUDA/dep/benchmarker; . ../../init.env; LD_PRELOAD=/root/MocCUDA/lib/libMocCUDA.so:/usr/local/lib/libomp.so:/usr/lib/x86_64-linux-gnu/libopenblas.so python3 -m benchmarker --framework=pytorch --problem=resnet50 --mode=training --problem_size=1 --batch_size=1 --gpu=0 --path_out=/tmp/benchmarkerlogs
