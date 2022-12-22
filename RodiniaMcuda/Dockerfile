@@ -75,4 +75,14 @@ WORKDIR /root/rodinia/
 COPY ./run_all_benches.sh ./scripts/run_all_benches.sh
 RUN ./scripts/run_all_benches.sh
 
-#RUN bash -c "./run-scaling.sh '128 256' '1 2 4 8 16 24' 10 > mm_results.py"
+RUN apt-get update
+RUN apt-get install python3-pandas -y
+
+RUN mkdir plots
+WORKDIR plots
+COPY ./rodinia.py ./
+COPY ./plot_timed_cuda.py ./
+RUN python3 rodinia.py
+
+COPY ./mcuda.py ./
+RUN python3 mcuda.py
